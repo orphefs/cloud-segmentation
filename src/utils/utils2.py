@@ -1,3 +1,4 @@
+import glob
 import os
 import numpy as np
 import rasterio
@@ -196,77 +197,68 @@ class ImageTiler:
 
         return bounds
 
-    def extract_tile(self, path_to_image: str, tile_shape: Tuple[int, int], bands=1):
+    def extract_tile(self, paths_to_images: List[str], path_to_tiled_images: str, tile_shape: Tuple[int, int],
+                     bands: List[str]):
 
+        if os.path.isdir(path_to_tiled_images):
+            raise UserWarning("Output path {} exists and may be non-empty.".format(path_to_tiled_images))
 
-        with rasterio.open(path_to_image, "r") as infile:
-            if bands == 1:
-                band_r = infile.read(1)
-            if bands == 3:
-                band_g = infile.read(2)
-                band_b = infile.read(3)
-            if bands == 4:
-                band_nir = infile.read(8)
+        if not os.path.exists(path_to_tiled_images):
+            os.mkdir(path_to_tiled_images)
 
-        list_of_bounds = self._compute_bounds(band_r.shape, tile_shape, path_to_image)
+        # loop through raw tifs
+        for path_to_image in paths_to_images:
+            with rasterio.open(path_to_image, "r") as infile:
+                if "r" in bands:
+                    band_r = infile.read(1)
+                if "g" in bands:
+                    band_g = infile.read(2)
+                if "b" in bands:
+                    band_b = infile.read(3)
+                if "nir" in bands:
+                    band_nir = infile.read(8)
 
-        for index, bounds in enumerate(list_of_bounds):
+            # compute tile bounds
+            list_of_bounds = self._compute_bounds(band_r.shape, tile_shape, path_to_image)
 
-            if bands == 1:
-                out_r = band_r[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-                im_out_r = Image.fromarray(out_r)
-                im_out_r.save(os.path.splitext(path_to_image)[0] + "_r_tile_{}.png".format(index),
-                    format="png")
+            # loop through each tile and write to disk
+            # TODO: possibly need to clip target mask to (0,1)
+            for index, bounds in enumerate(list_of_bounds):
+                bname = os.path.basename(os.path.splitext(path_to_image)[0])
+                if "r" in bands:
+                    out_r = band_r[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                    im_out_r = Image.fromarray(out_r)
+                    im_out_r.save(os.path.join(path_to_tiled_images,
+                        bname + "_band=r_tile={}.png".format(index)),
+                        format="png")
 
-            if bands == 3:
-                out_g = band_g[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-                im_out_g = Image.fromarray(out_g)
-                im_out_g.save(os.path.splitext(path_to_image)[0] + "_g_tile_{}.png".format(index),
-                    format="png")
+                if "g" in bands:
+                    out_g = band_g[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                    im_out_g = Image.fromarray(out_g)
+                    im_out_g.save(os.path.join(path_to_tiled_images,
+                        bname + "_band=g_tile={}.png".format(index)),
+                        format="png")
 
-                out_b = band_b[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-                im_out_b = Image.fromarray(out_b)
-                im_out_b.save(os.path.splitext(path_to_image)[0] + "_b_tile_{}.png".format(index),
-                    format="png")
+                if "b" in bands:
+                    out_b = band_b[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                    im_out_b = Image.fromarray(out_b)
+                    im_out_b.save(os.path.join(path_to_tiled_images,
+                        bname + "_band=b_tile={}.png".format(index)),
+                        format="png")
 
-            if bands == 4:
-                out_nir = band_nir[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-                im_out_nir = Image.fromarray(out_nir)
-                im_out_nir.save(os.path.splitext(path_to_image)[0] + "_nir_tile_{}.png".format(index),
-                    format="png")
-
-
-class SegmentationTileItemList:
-
-    def __init__(self, paths_to_tiled_images: List[pathlib.PosixPath]):
-        self.paths_to_tiled_images = paths_to_tiled_images
-
-    def open(self, fn: ImageTile) -> Image:
-        return open_image_tile(fn, convert_mode=self.convert_mode, after_open=self.after_open)
-
-    @classmethod
-    def from_folder(cls, path: str = '.', rows=1, cols=1, extensions: Collection[str] = None,
-                    **kwargs):
-        """patchs the from_folder method, generating list of ImageTile
-        with all the possible tiles for all the images in folder"""
-        files = get_image_files(path)
-        paths_to_tiled_images = get_tiles(files, rows, cols)
-        return paths_to_tiled_images
-
-
-def label_func(fn): return path / "labels" / f"{fn.stem}_P{fn.suffix}"
+                if "nir" in bands:
+                    out_nir = band_nir[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                    im_out_nir = Image.fromarray(out_nir)
+                    im_out_nir.save(os.path.join(path_to_tiled_images,
+                        bname + "_band=nir_tile={}.png".format(index)),
+                        format="png")
 
 
 if __name__ == '__main__':
     # get the images to be tiled
-    list_of_tiles = SegmentationTileItemList.from_folder(path="/tmp/overstory/labels", rows=4, cols=4)
-    image_tiler = ImageTiler(list_of_tiles)
-    image_tiler.extract_tile(path_to_image=list_of_tiles[0].path, tile_shape=(1024, 1024))
-    #
-    # path = pathlib.Path("/tmp/overstory/")
-    # fnames = get_image_files(path / "images")
-    # codes = np.loadtxt(path / 'codes.txt', dtype=str)
-    # dls = SegmentationDataLoaders.from_label_func(
-    #     path, bs=8, fnames=fnames, label_func=label_func, codes=codes
-    # )
-    # dls.show_batch(max_n=6)
+    path_to_raw_images = "/tmp/overstory/raw/images"
+    path_to_tiled_images = "/tmp/overstory/tiled_tmp/images"
+    paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
+    image_tiler = ImageTiler(paths_to_raw_images)
+    image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=(1024, 1024),
+        bands=["r", "g", "b", "nir"])
