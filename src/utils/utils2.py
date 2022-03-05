@@ -2,7 +2,9 @@ import glob
 import os
 import numpy as np
 import rasterio
+import torch
 from fastai.vision.data import ImageDataLoaders, SegmentationDataLoaders
+from torch.utils.data import DataLoader
 from typing import Collection, List, Tuple
 
 from PIL import Image
@@ -14,6 +16,8 @@ import pathlib
 from collections import namedtuple
 
 from torchvision.models.detection.image_list import ImageList
+
+from src.utils.dataset import CloudDataset
 
 ImageTile = namedtuple('ImageTile', 'path idx rows cols')
 
@@ -254,8 +258,22 @@ class ImageTiler:
                         format="png")
 
 
-if __name__ == '__main__':
+def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, batch_size: int = 16,
+                    split: Tuple[int, int] = (80, 20)) -> Tuple[DataLoader, DataLoader]:
 
+    data = CloudDataset(
+        path_to_images_dir=path_to_tiled_img_dir,
+        path_to_labels_dir=path_to_tiled_label_dir,
+    )
+
+    train_ds, valid_ds = torch.utils.data.random_split(data, split)
+
+    train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    valid_dl = DataLoader(valid_ds, batch_size=batch_size, shuffle=True)
+    return train_dl, valid_dl
+
+
+if __name__ == '__main__':
     tile_shape = (1024, 1024)
 
     # # tile the images
@@ -273,4 +291,4 @@ if __name__ == '__main__':
     paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
     image_tiler = ImageTiler(paths_to_raw_images)
     image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=tile_shape,
-        bands=["r",])
+        bands=["r", ])
