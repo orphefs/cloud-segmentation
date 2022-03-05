@@ -196,32 +196,44 @@ class ImageTiler:
 
         return bounds
 
-    def extract_tile(self, path_to_image: str, tile_shape: Tuple[int, int]):
+    def extract_tile(self, path_to_image: str, tile_shape: Tuple[int, int], bands=1):
+
+
         with rasterio.open(path_to_image, "r") as infile:
-            band_r = infile.read(1)
-            band_g = infile.read(2)
-            band_b = infile.read(3)
-            # band_nir = infile.read(8)
+            if bands == 1:
+                band_r = infile.read(1)
+            if bands == 3:
+                band_g = infile.read(2)
+                band_b = infile.read(3)
+            if bands == 4:
+                band_nir = infile.read(8)
 
         list_of_bounds = self._compute_bounds(band_r.shape, tile_shape, path_to_image)
 
         for index, bounds in enumerate(list_of_bounds):
-            out_r = band_r[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-            out_g = band_g[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-            out_b = band_b[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
-            # out_nir = band_nir[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
 
-            im = Image.fromarray(out_r)
-            im.save(os.path.splitext(path_to_image)[0] + "_r_tile_{}.png".format(index),
-                format="png")
-            im = Image.fromarray(out_g)
+            if bands == 1:
+                out_r = band_r[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                im_out_r = Image.fromarray(out_r)
+                im_out_r.save(os.path.splitext(path_to_image)[0] + "_r_tile_{}.png".format(index),
+                    format="png")
 
-            im.save(os.path.splitext(path_to_image)[0] + "_g_tile_{}.png".format(index),
-                format="png")
-            im = Image.fromarray(out_b)
+            if bands == 3:
+                out_g = band_g[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                im_out_g = Image.fromarray(out_g)
+                im_out_g.save(os.path.splitext(path_to_image)[0] + "_g_tile_{}.png".format(index),
+                    format="png")
 
-            im.save(os.path.splitext(path_to_image)[0] + "_b_tile_{}.png".format(index),
-                format="png")
+                out_b = band_b[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                im_out_b = Image.fromarray(out_b)
+                im_out_b.save(os.path.splitext(path_to_image)[0] + "_b_tile_{}.png".format(index),
+                    format="png")
+
+            if bands == 4:
+                out_nir = band_nir[bounds.y_min:bounds.y_max, bounds.x_min:bounds.x_max]
+                im_out_nir = Image.fromarray(out_nir)
+                im_out_nir.save(os.path.splitext(path_to_image)[0] + "_nir_tile_{}.png".format(index),
+                    format="png")
 
 
 class SegmentationTileItemList:
@@ -247,7 +259,7 @@ def label_func(fn): return path / "labels" / f"{fn.stem}_P{fn.suffix}"
 
 if __name__ == '__main__':
     # get the images to be tiled
-    list_of_tiles = SegmentationTileItemList.from_folder(path="/tmp/overstory/images", rows=4, cols=4)
+    list_of_tiles = SegmentationTileItemList.from_folder(path="/tmp/overstory/labels", rows=4, cols=4)
     image_tiler = ImageTiler(list_of_tiles)
     image_tiler.extract_tile(path_to_image=list_of_tiles[0].path, tile_shape=(1024, 1024))
     #
