@@ -5,6 +5,8 @@ from typing import Collection, List, Tuple
 from PIL import Image
 import pathlib
 from collections import namedtuple
+
+from definitions import DATA_DIR
 from src.utils.dataset import CloudDataset
 
 ImageTile = namedtuple('ImageTile', 'path idx rows cols')
@@ -263,18 +265,18 @@ def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, ba
 if __name__ == '__main__':
     tile_shape = (1024, 1024)
 
-    # # tile the images
-    # path_to_raw_images = "/tmp/overstory/raw/images"
-    # path_to_tiled_images = "/tmp/overstory/tiled/images"
-    # paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
-    # image_tiler = ImageTiler(paths_to_raw_images)
-    # image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=tile_shape,
-    #     bands=["r", "g", "b", "nir"])
+    # tile the images
+    path_to_raw_images = os.path.join(DATA_DIR, "raw", "images")
+    path_to_tiled_images = os.path.join(DATA_DIR, "tiled", "images")
+    paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
+    image_tiler = ImageTiler(paths_to_raw_images)
+    image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=tile_shape,
+        bands=["r", "g", "b", "nir"])
 
 
     # tile the labels
-    path_to_raw_images = "/tmp/overstory/raw/labels"
-    path_to_tiled_images = "/tmp/overstory/tiled/labels"
+    path_to_raw_images = os.path.join(DATA_DIR, "raw", "labels")
+    path_to_tiled_images = os.path.join(DATA_DIR, "tiled", "labels")
     paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
     image_tiler = ImageTiler(paths_to_raw_images)
     image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=tile_shape,

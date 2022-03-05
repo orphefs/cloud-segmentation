@@ -1,9 +1,12 @@
+import os
 import time
 
 import torch
 from typing import Callable
 
-device = torch.device("cpu")
+from definitions import DATA_DIR
+
+device = torch.device("cuda")
 
 from torch import nn
 from torch.nn import CrossEntropyLoss
@@ -110,8 +113,8 @@ if __name__ == '__main__':
     unet = UNET(4, 2)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
-        path_to_tiled_img_dir="/tmp/overstory/tiled/images",
-        path_to_tiled_label_dir="/tmp/overstory/tiled/labels",
+        path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
+        path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "images"),
         batch_size=1,
         split=(80, 20)
 
