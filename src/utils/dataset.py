@@ -1,13 +1,11 @@
-import glob
 import pprint
 import numpy as np
 import torch
 
-from torch.utils.data import Dataset, DataLoader, sampler
+from torch.utils.data import Dataset, DataLoader
 from pathlib import Path, PosixPath
 from PIL import Image
 import matplotlib.pyplot as plt
-import os
 
 
 class CloudDataset(Dataset):

@@ -1,6 +1,8 @@
 import time
 
 import torch
+from typing import Callable
+
 device = torch.device("cpu")
 
 from torch import nn
@@ -13,7 +15,7 @@ from src.utils.utils2 import get_dataloaders
 
 
 def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
-          loss_fn: CrossEntropyLoss, optimizer: Optimizer, accuracy_fn, epochs: int = 1):
+          loss_fn: CrossEntropyLoss, optimizer: Optimizer, accuracy_fn: Callable, epochs: int = 1):
     start = time.time()
     if device.type != "cpu":
         model.cuda()
@@ -51,7 +53,13 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                     # zero the gradients
                     optimizer.zero_grad()
                     outputs = model(x)
+                    print("x: ", x.shape)
+                    print("outputs: ", outputs.shape)
+                    print("y: ", y.shape)
                     loss = loss_fn(outputs, y)
+                    print(loss)
+                    # TODO: added np.squeeze() to match dimensions
+                    # loss = loss_fn(np.squeeze(outputs), np.squeeze(y))
 
                     # the backward pass frees the graph memory, so there is no
                     # need for torch.no_grad in this training pass
@@ -90,17 +98,22 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
 
 
 def accuracy_metric(predb, yb):
-    return (predb.argmax(dim=1) == yb.cuda()).float().mean()
+    # accuracy metric is defined as the mean value of number of matched pixels between
+    # prediction and mask
+    if device.type != "cpu":
+        return (predb.argmax(dim=1) == yb.cuda()).float().mean()
+    else:
+        return (predb.argmax(dim=1) == yb).float().mean()
 
 
 if __name__ == '__main__':
-    unet = UNET(4, 1)
+    unet = UNET(4, 2)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir="/tmp/overstory/tiled/images",
         path_to_tiled_label_dir="/tmp/overstory/tiled/labels",
         batch_size=1,
-        split=(80,20)
+        split=(80, 20)
 
     )
     loss_function = nn.CrossEntropyLoss()

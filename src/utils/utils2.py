@@ -1,22 +1,10 @@
 import glob
-import os
-import numpy as np
-import rasterio
 import torch
-from fastai.vision.data import ImageDataLoaders, SegmentationDataLoaders
 from torch.utils.data import DataLoader
 from typing import Collection, List, Tuple
-
 from PIL import Image
-from fastai.data.transforms import get_files, get_image_files
-from fastai.vision import *
-from fastai.data import *
 import pathlib
-
 from collections import namedtuple
-
-from torchvision.models.detection.image_list import ImageList
-
 from src.utils.dataset import CloudDataset
 
 ImageTile = namedtuple('ImageTile', 'path idx rows cols')
@@ -260,7 +248,6 @@ class ImageTiler:
 
 def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, batch_size: int = 16,
                     split: Tuple[int, int] = (80, 20)) -> Tuple[DataLoader, DataLoader]:
-
     data = CloudDataset(
         path_to_images_dir=path_to_tiled_img_dir,
         path_to_labels_dir=path_to_tiled_label_dir,

@@ -1,0 +1,12 @@
+fastai
+torch
+ipython
+numpy
+typing
+pathlib
+os
+glob
+pillow
+collections
+time
+pprint
