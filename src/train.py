@@ -59,6 +59,8 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                     print("x: ", x.shape)
                     print("outputs: ", outputs.shape)
                     print("y: ", y.shape)
+                    print("target min", y.min())
+                    print("target max", y.max())
                     loss = loss_fn(outputs, y)
                     print(loss)
                     # TODO: added np.squeeze() to match dimensions
@@ -119,7 +121,7 @@ if __name__ == '__main__':
         split=(80, 20)
 
     )
-    loss_function = nn.CrossEntropyLoss()
+    loss_function = nn.CrossEntropyLoss
     optimizer = torch.optim.Adam(unet.parameters(), lr=0.01)
     train_loss, validation_loss = train(
         model=unet,
