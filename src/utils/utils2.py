@@ -255,10 +255,22 @@ class ImageTiler:
 
 
 if __name__ == '__main__':
-    # get the images to be tiled
-    path_to_raw_images = "/tmp/overstory/raw/images"
-    path_to_tiled_images = "/tmp/overstory/tiled_tmp/images"
+
+    tile_shape = (1024, 1024)
+
+    # # tile the images
+    # path_to_raw_images = "/tmp/overstory/raw/images"
+    # path_to_tiled_images = "/tmp/overstory/tiled/images"
+    # paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
+    # image_tiler = ImageTiler(paths_to_raw_images)
+    # image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=tile_shape,
+    #     bands=["r", "g", "b", "nir"])
+
+
+    # tile the labels
+    path_to_raw_images = "/tmp/overstory/raw/labels"
+    path_to_tiled_images = "/tmp/overstory/tiled/labels"
     paths_to_raw_images = glob.glob(os.path.join(path_to_raw_images, "*.tif"))
     image_tiler = ImageTiler(paths_to_raw_images)
-    image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=(1024, 1024),
-        bands=["r", "g", "b", "nir"])
+    image_tiler.extract_tile(paths_to_raw_images, path_to_tiled_images, tile_shape=tile_shape,
+        bands=["r",])
