@@ -1,11 +1,12 @@
 import os
 import time
 from pathlib import Path
-
+import numpy as np
+import matplotlib.pyplot as plt
 import torch
 from typing import Callable
 
-from definitions import DATA_DIR, DEBUG_PRINT
+from definitions import DATA_DIR, DEBUG_PRINT, DEBUG_PLOT
 
 if torch.cuda.is_available():
     device = torch.device("cuda")
@@ -97,7 +98,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                 if step % 10 == 0:
                     # clear_output(wait=True)
                     print('Current step: {}  Loss: {}  Acc: {}  AllocMem (Mb): {}'.format(step, loss, acc,
-                                                                                          torch.cuda.memory_allocated() / 1024 / 1024))
+                        torch.cuda.memory_allocated() / 1024 / 1024))
                     # print(torch.cuda.memory_summary())
 
             epoch_loss = running_loss / len(dataloader.dataset)
@@ -128,9 +129,30 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
 #     else:
 #         return (predb.argmax(dim=1) == yb).float().mean()
 def accuracy_metric(inp, targ):
+
+
+
     targ = targ.squeeze(1)
-    mask = targ != 0
-    return (inp.argmax(dim=1)[mask] == targ[mask]).float().mean()
+    mask = targ == 1
+
+
+    accuracy = (inp.argmax(dim=1)[mask] == targ[mask]).float().mean()
+
+    if DEBUG_PLOT:
+        inp_np = inp[0, 0, :, :].detach().numpy()
+        targ_np = targ[ 0, :, :].detach().numpy()
+        mask_np = mask[0, :, :].detach().numpy()
+        fig, ax = plt.subplots(2, 3)
+        ax[0, 0].imshow(inp_np)
+        ax[0, 1].imshow(targ_np)
+        ax[0, 2].imshow(mask_np)
+        ax[1, 0].hist(inp_np.flatten(), bins=100)
+        ax[1, 1].hist(targ_np.flatten(), bins=100)
+        ax[1, 2].hist(np.uint8(mask_np.flatten()), bins=100)
+        fig.suptitle('Accuracy: {}'.format(accuracy), fontsize=16)
+        plt.show()
+
+    return accuracy if not np.isnan(accuracy) else 0.0
 
 
 if __name__ == '__main__':
@@ -145,7 +167,7 @@ if __name__ == '__main__':
         path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "labels"),
         batch_size=1,
         split=(80, 20),
-        normalize_dataset=True,
+        normalize_dataset=False,
     )
     loss_function = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(unet.parameters(), lr=0.01)
