@@ -5,13 +5,12 @@ from pathlib import Path
 import torch
 from typing import Callable
 
-from definitions import DATA_DIR
+from definitions import DATA_DIR, DEBUG_PRINT
 
 if torch.cuda.is_available():
     device = torch.device("cuda")
 else:
     device = torch.device("cpu")
-
 
 from torch import nn
 from torch.nn import CrossEntropyLoss
@@ -62,15 +61,18 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                     # zero the gradients
                     optimizer.zero_grad()
                     outputs = model(x)
-                    print("x: ", x.shape)
-                    print("outputs: ", outputs.shape)
-                    print("y: ", y.shape)
-                    print("target min", y.min())
-                    print("target max", y.max())
+
+                    if DEBUG_PRINT:
+                        print("x: ", x.shape)
+                        print("outputs: ", outputs.shape)
+                        print("y: ", y.shape)
+                        print("target min", y.min())
+                        print("target max", y.max())
+
                     loss = loss_fn(outputs, y.to(torch.float32))
-                    print(loss)
-                    # TODO: added np.squeeze() to match dimensions
-                    # loss = loss_fn(np.squeeze(outputs), np.squeeze(y))
+
+                    if DEBUG_PRINT:
+                        print(loss)
 
                     # the backward pass frees the graph memory, so there is no
                     # need for torch.no_grad in this training pass
