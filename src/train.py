@@ -5,7 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import torch
 from typing import Callable
-
 from definitions import DATA_DIR, DEBUG_PRINT, DEBUG_PLOT
 
 if torch.cuda.is_available():
@@ -13,7 +12,7 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
 
-from torch import nn
+from torch import nn, Tensor
 from torch.nn import CrossEntropyLoss
 from torch.optim import Optimizer
 from torch.utils.data import DataLoader
@@ -58,7 +57,9 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                 step += 1
 
                 # convert to datatype according to loss fn
-                y = y.to(torch.float32)
+
+                x = x.to(device=device, dtype=torch.float32)
+                y = y.to(device=device, dtype=torch.long)
 
                 # forward pass
                 if phase == 'train':
@@ -90,7 +91,6 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                         outputs = model(x)
                         loss = loss_fn(outputs, y)
 
-                # stats - whatever is the phase
                 acc = accuracy_fn(outputs, y)
 
                 running_acc += acc * dataloader.batch_size
@@ -122,26 +122,15 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
     return train_loss, valid_loss
 
 
-# def accuracy_metric(predb, yb):
-#     # accuracy metric is defined as the mean value of number of matched pixels between
-#     # prediction and mask
-#     if device.type != "cpu":
-#         return (predb.argmax(dim=1) == yb.cuda()).float().mean()
-#     else:
-#         return (predb.argmax(dim=1) == yb).float().mean()
 def accuracy_metric(inp, targ):
-
-
-
     targ = targ.squeeze(1)
     mask = targ == 1
-
 
     accuracy = (inp.argmax(dim=1)[mask] == targ[mask]).float().mean()
 
     if DEBUG_PLOT:
         inp_np = inp[0, 0, :, :].cpu().detach().numpy()
-        targ_np = targ[ 0, :, :].cpu().detach().numpy()
+        targ_np = targ[0, :, :].cpu().detach().numpy()
         mask_np = mask[0, :, :].cpu().detach().numpy()
         fig, ax = plt.subplots(2, 3)
         ax[0, 0].imshow(inp_np)
@@ -161,7 +150,7 @@ if __name__ == '__main__':
     if not os.path.exists(path_to_checkpoints_dir):
         os.mkdir(path_to_checkpoints_dir)
 
-    unet = UNET(n_channels=4, n_classes=2)
+    unet = UNET(n_channels=4, n_classes=2, bilinear=True)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
@@ -171,7 +160,7 @@ if __name__ == '__main__':
         normalize_dataset=False,
     )
     loss_function = nn.CrossEntropyLoss()
-    optimizer = torch.optim.Adam(unet.parameters(), lr=0.01)
+    optimizer = torch.optim.RMSprop(unet.parameters(), lr=0.01)
     train_loss, validation_loss = train(
         model=unet,
         train_dl=train_dl,
