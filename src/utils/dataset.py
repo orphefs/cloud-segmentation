@@ -11,6 +11,8 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from torchvision.transforms import Compose
 
+from definitions import DEBUG_PLOT
+
 
 class CloudDataset(Dataset):
     def __init__(self, path_to_images_dir: PosixPath, path_to_labels_dir: PosixPath,
@@ -58,10 +60,11 @@ class CloudDataset(Dataset):
         clipped_mask = np.where(raw_mask > 0.0, 1, 0)
 
         # debug plotting
-        fig, ax = plt.subplots(nrows=1, ncols=2)
-        ax[0].imshow(raw_mask)
-        ax[1].imshow(clipped_mask)
-        plt.show()
+        if DEBUG_PLOT:
+            fig, ax = plt.subplots(nrows=1, ncols=2)
+            ax[0].imshow(raw_mask)
+            ax[1].imshow(clipped_mask)
+            plt.show()
 
         return np.expand_dims(clipped_mask, 0) if add_dims else raw_mask
 
@@ -80,12 +83,13 @@ class CloudDataset(Dataset):
         normalized = (raw_rgb - raw_rgb.min()) / (raw_rgb.max() - raw_rgb.min())
 
         # debug plotting
-        fig, ax = plt.subplots(nrows=1, ncols=4)
-        ax[0].imshow(normalized[0, :, :])
-        ax[1].imshow(normalized[1, :, :])
-        ax[2].imshow(normalized[2, :, :])
-        ax[3].imshow(normalized[3, :, :])
-        plt.show()
+        if DEBUG_PLOT:
+            fig, ax = plt.subplots(nrows=1, ncols=4)
+            ax[0].imshow(normalized[0, :, :])
+            ax[1].imshow(normalized[1, :, :])
+            ax[2].imshow(normalized[2, :, :])
+            ax[3].imshow(normalized[3, :, :])
+            plt.show()
 
         return normalized
 
