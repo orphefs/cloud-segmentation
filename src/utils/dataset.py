@@ -1,16 +1,22 @@
 import pprint
+from typing import Optional
+
 import numpy as np
 import torch
+import torchvision
 
 from torch.utils.data import Dataset, DataLoader
 from pathlib import Path, PosixPath
 from PIL import Image
 import matplotlib.pyplot as plt
+from torchvision.transforms import Compose
 
 
 class CloudDataset(Dataset):
-    def __init__(self, path_to_images_dir: PosixPath, path_to_labels_dir: PosixPath, pytorch=True):
-        super().__init__()
+    def __init__(self, path_to_images_dir: PosixPath, path_to_labels_dir: PosixPath,
+                 transform: Optional[Compose],
+                 pytorch=True):
+        self.transform = transform
         path_to_images_dir = Path(path_to_images_dir)
         path_to_labels_dir = Path(path_to_labels_dir)
 
@@ -46,18 +52,13 @@ class CloudDataset(Dataset):
         ]
         self.pytorch = pytorch
 
-
     def open_mask(self, idx, add_dims=False):
-
         raw_mask = np.array(Image.open(self.files[idx]['gt']))
         # TODO: check correctness of line below
         clipped_mask = np.where(raw_mask > 0.0, 1, 0)
-
-
         return np.expand_dims(clipped_mask, 0) if add_dims else raw_mask
 
     def open_as_array(self, idx, invert=False, include_nir=False):
-
         raw_rgb = np.stack([np.array(Image.open(self.files[idx]['red'])),
                             np.array(Image.open(self.files[idx]['green'])),
                             np.array(Image.open(self.files[idx]['blue'])),
@@ -100,7 +101,6 @@ if __name__ == '__main__':
     fig, ax = plt.subplots(1, 2, figsize=(10, 9))
     ax[0].imshow(data.open_as_array(11))
     ax[1].imshow(data.open_mask(11))
-
 
     train_ds, valid_ds = torch.utils.data.random_split(data, (80, 20))
 
