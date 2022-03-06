@@ -111,13 +111,17 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
     return train_loss, valid_loss
 
 
-def accuracy_metric(predb, yb):
-    # accuracy metric is defined as the mean value of number of matched pixels between
-    # prediction and mask
-    if device.type != "cpu":
-        return (predb.argmax(dim=1) == yb.cuda()).float().mean()
-    else:
-        return (predb.argmax(dim=1) == yb).float().mean()
+# def accuracy_metric(predb, yb):
+#     # accuracy metric is defined as the mean value of number of matched pixels between
+#     # prediction and mask
+#     if device.type != "cpu":
+#         return (predb.argmax(dim=1) == yb.cuda()).float().mean()
+#     else:
+#         return (predb.argmax(dim=1) == yb).float().mean()
+def accuracy_metric(inp, targ):
+    targ = targ.squeeze(1)
+    mask = targ != 0
+    return (inp.argmax(dim=1)[mask] == targ[mask]).float().mean()
 
 
 if __name__ == '__main__':
