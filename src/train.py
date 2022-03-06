@@ -6,7 +6,7 @@ from typing import Callable
 
 from definitions import DATA_DIR
 
-device = torch.device("cuda")
+device = torch.device("cpu")
 
 from torch import nn
 from torch.nn import CrossEntropyLoss
@@ -61,7 +61,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                     print("y: ", y.shape)
                     print("target min", y.min())
                     print("target max", y.max())
-                    loss = loss_fn(outputs, y)
+                    loss = loss_fn(outputs, y.to(torch.float32))
                     print(loss)
                     # TODO: added np.squeeze() to match dimensions
                     # loss = loss_fn(np.squeeze(outputs), np.squeeze(y))
@@ -112,7 +112,7 @@ def accuracy_metric(predb, yb):
 
 
 if __name__ == '__main__':
-    unet = UNET(4, 2)
+    unet = UNET(4, 1)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
@@ -121,7 +121,7 @@ if __name__ == '__main__':
         split=(80, 20)
 
     )
-    loss_function = nn.CrossEntropyLoss
+    loss_function = nn.MSELoss()
     optimizer = torch.optim.Adam(unet.parameters(), lr=0.01)
     train_loss, validation_loss = train(
         model=unet,
