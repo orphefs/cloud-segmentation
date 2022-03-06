@@ -7,7 +7,11 @@ from typing import Callable
 
 from definitions import DATA_DIR
 
-device = torch.device("cpu")
+if torch.cuda.is_available():
+    device = torch.device("cuda")
+else:
+    device = torch.device("cpu")
+
 
 from torch import nn
 from torch.nn import CrossEntropyLoss
