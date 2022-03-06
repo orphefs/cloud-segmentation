@@ -56,6 +56,9 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                     y = y.cuda()
                 step += 1
 
+                # convert to datatype according to loss fn
+                y = y.to(torch.float32)
+
                 # forward pass
                 if phase == 'train':
                     # zero the gradients
@@ -69,7 +72,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                         print("target min", y.min())
                         print("target max", y.max())
 
-                    loss = loss_fn(outputs, y.to(torch.float32))
+                    loss = loss_fn(outputs, y)
 
                     if DEBUG_PRINT:
                         print(loss)
@@ -83,7 +86,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                 else:
                     with torch.no_grad():
                         outputs = model(x)
-                        loss = loss_fn(outputs, y.long())
+                        loss = loss_fn(outputs, y)
 
                 # stats - whatever is the phase
                 acc = accuracy_fn(outputs, y)
@@ -94,7 +97,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                 if step % 10 == 0:
                     # clear_output(wait=True)
                     print('Current step: {}  Loss: {}  Acc: {}  AllocMem (Mb): {}'.format(step, loss, acc,
-                        torch.cuda.memory_allocated() / 1024 / 1024))
+                                                                                          torch.cuda.memory_allocated() / 1024 / 1024))
                     # print(torch.cuda.memory_summary())
 
             epoch_loss = running_loss / len(dataloader.dataset)
@@ -154,5 +157,5 @@ if __name__ == '__main__':
         optimizer=optimizer,
         accuracy_fn=accuracy_metric,
         path_to_model_checkpoint=path_to_checkpoints_dir / "model.pt",
-        epochs=1,
+        epochs=10,
     )

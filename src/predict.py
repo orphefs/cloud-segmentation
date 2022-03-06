@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # load data
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
-        path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "images"),
+        path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "labels"),
         batch_size=1,
         split=(80, 20)
 
