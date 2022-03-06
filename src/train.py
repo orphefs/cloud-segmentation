@@ -73,6 +73,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                         print("target min", y.min())
                         print("target max", y.max())
 
+                    y = torch.argmax(y, dim=1)
                     loss = loss_fn(outputs, y)
 
                     if DEBUG_PRINT:
@@ -160,7 +161,7 @@ if __name__ == '__main__':
     if not os.path.exists(path_to_checkpoints_dir):
         os.mkdir(path_to_checkpoints_dir)
 
-    unet = UNET(4, 1)
+    unet = UNET(retain_dim=True)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
