@@ -139,9 +139,9 @@ def accuracy_metric(inp, targ):
     accuracy = (inp.argmax(dim=1)[mask] == targ[mask]).float().mean()
 
     if DEBUG_PLOT:
-        inp_np = inp[0, 0, :, :].detach().numpy()
-        targ_np = targ[ 0, :, :].detach().numpy()
-        mask_np = mask[0, :, :].detach().numpy()
+        inp_np = inp[0, 0, :, :].cpu().detach().numpy()
+        targ_np = targ[ 0, :, :].cpu().detach().numpy()
+        mask_np = mask[0, :, :].cpu().detach().numpy()
         fig, ax = plt.subplots(2, 3)
         ax[0, 0].imshow(inp_np)
         ax[0, 1].imshow(targ_np)
@@ -152,7 +152,7 @@ def accuracy_metric(inp, targ):
         fig.suptitle('Accuracy: {}'.format(accuracy), fontsize=16)
         plt.show()
 
-    return accuracy if not np.isnan(accuracy) else 0.0
+    return accuracy if not accuracy.isnan() else 0.0
 
 
 if __name__ == '__main__':
@@ -169,7 +169,7 @@ if __name__ == '__main__':
         split=(80, 20),
         normalize_dataset=False,
     )
-    loss_function = nn.BCEWithLogitsLoss()
+    loss_function = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(unet.parameters(), lr=0.01)
     train_loss, validation_loss = train(
         model=unet,

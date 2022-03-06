@@ -35,12 +35,14 @@ if __name__ == '__main__':
     out_data = model(x)
 
     # plotting
-    fig, ax = plt.subplots(nrows=2, ncols=4)
+    fig, ax = plt.subplots(nrows=3, ncols=4)
     ax[0, 0].imshow(x[0, 0, :, :])
     ax[0, 1].imshow(x[0, 1, :, :])
     ax[0, 2].imshow(x[0, 2, :, :])
     ax[0, 3].imshow(x[0, 3, :, :])
     ax[1, 0].imshow(out_data.detach().numpy()[0, 0, :, :])
     ax[1, 1].imshow(y.detach().numpy()[0, 0, :, :])
+    ax[2, 0].hist(out_data.detach().numpy()[0, 0, :, :].flatten())
+    ax[2, 1].hist(y.detach().numpy()[0, 0, :, :].flatten())
 
     plt.show()
