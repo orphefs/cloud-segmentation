@@ -1,5 +1,6 @@
 import os
 import time
+from pathlib import Path
 
 import torch
 from typing import Callable
@@ -18,7 +19,8 @@ from src.utils.utils2 import get_dataloaders
 
 
 def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
-          loss_fn: CrossEntropyLoss, optimizer: Optimizer, accuracy_fn: Callable, epochs: int = 1):
+          loss_fn: CrossEntropyLoss, optimizer: Optimizer, accuracy_fn: Callable,
+          path_to_model_checkpoint: str, epochs: int = 1):
     start = time.time()
     if device.type != "cpu":
         model.cuda()
@@ -96,6 +98,13 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
 
             train_loss.append(epoch_loss) if phase == 'train' else valid_loss.append(epoch_loss)
 
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': epoch_loss,
+        }, path_to_model_checkpoint)
+
     time_elapsed = time.time() - start
     print('Training complete in {:.0f}m {:.0f}s'.format(time_elapsed // 60, time_elapsed % 60))
 
@@ -112,6 +121,10 @@ def accuracy_metric(predb, yb):
 
 
 if __name__ == '__main__':
+    path_to_checkpoints_dir = Path(DATA_DIR) / "checkpoints"
+    if not os.path.exists(path_to_checkpoints_dir):
+        os.mkdir(path_to_checkpoints_dir)
+
     unet = UNET(4, 1)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
@@ -130,5 +143,6 @@ if __name__ == '__main__':
         loss_fn=loss_function,
         optimizer=optimizer,
         accuracy_fn=accuracy_metric,
+        path_to_model_checkpoint=path_to_checkpoints_dir / "model.pt",
         epochs=1,
     )
