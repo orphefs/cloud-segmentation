@@ -161,7 +161,7 @@ if __name__ == '__main__':
     if not os.path.exists(path_to_checkpoints_dir):
         os.mkdir(path_to_checkpoints_dir)
 
-    unet = UNET(retain_dim=True)
+    unet = UNET(n_channels=4, n_classes=2)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
