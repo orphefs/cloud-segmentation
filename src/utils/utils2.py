@@ -250,42 +250,45 @@ class ImageTiler:
 
 
 def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, batch_size: int = 16,
-                    split: Tuple[int, int] = (80, 20)) -> Tuple[DataLoader, DataLoader]:
+                    split: Tuple[int, int] = (80, 20), normalize_dataset: bool = True) -> Tuple[
+    DataLoader, DataLoader]:
     data = CloudDataset(
         path_to_images_dir=path_to_tiled_img_dir,
         path_to_labels_dir=path_to_tiled_label_dir,
         transform=None,
     )
 
-    # load the data
-    loader = DataLoader(data, batch_size=batch_size, shuffle=False, num_workers=0)
+    if normalize_dataset:
 
-    # TODO: double-check correctness over mean and std computation
-    # compute mean and std over entire set
-    mean = 0.
-    std = 0.
-    for images, _ in loader:
-        batch_samples = images.size(0)  # batch size (the last batch can have smaller size!)
-        images = images.view(batch_samples, images.size(1), -1)
-        mean += images.mean(2).sum(0)
-        std += images.std(2).sum(0)
+        # load all the data
+        loader = DataLoader(data, batch_size=batch_size, shuffle=False, num_workers=0)
 
-    mean /= len(loader.dataset)
-    std /= len(loader.dataset)
+        # TODO: double-check correctness over mean and std computation
+        # compute mean and std over entire set
+        mean = 0.
+        std = 0.
+        for images, _ in loader:
+            batch_samples = images.size(0)  # batch size (the last batch can have smaller size!)
+            images = images.view(batch_samples, images.size(1), -1)
+            mean += images.mean(2).sum(0)
+            std += images.std(2).sum(0)
 
-    # load data again, this time with Normalize transform
-    transformed_data = CloudDataset(
-        path_to_images_dir=path_to_tiled_img_dir,
-        path_to_labels_dir=path_to_tiled_label_dir,
-        transform=transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean, std)
-        ])
+        mean /= len(loader.dataset)
+        std /= len(loader.dataset)
 
-    )
+        # load data again, this time with Normalize transform
+        data = CloudDataset(
+            path_to_images_dir=path_to_tiled_img_dir,
+            path_to_labels_dir=path_to_tiled_label_dir,
+            transform=transforms.Compose([
+                transforms.ToTensor(),
+                transforms.Normalize(mean, std)
+            ])
+
+        )
 
     # split the data
-    train_ds, valid_ds = torch.utils.data.random_split(transformed_data, split)
+    train_ds, valid_ds = torch.utils.data.random_split(data, split)
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=False, num_workers=0)
     valid_dl = DataLoader(valid_ds, batch_size=batch_size, shuffle=False, num_workers=0)
 

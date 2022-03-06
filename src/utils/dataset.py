@@ -56,6 +56,13 @@ class CloudDataset(Dataset):
         raw_mask = np.array(Image.open(self.files[idx]['gt']))
         # TODO: check correctness of line below
         clipped_mask = np.where(raw_mask > 0.0, 1, 0)
+
+        # debug plotting
+        fig, ax = plt.subplots(nrows=1, ncols=2)
+        ax[0].imshow(raw_mask)
+        ax[1].imshow(clipped_mask)
+        plt.show()
+
         return np.expand_dims(clipped_mask, 0) if add_dims else raw_mask
 
     def open_as_array(self, idx, invert=False, include_nir=False):
@@ -69,8 +76,18 @@ class CloudDataset(Dataset):
 
         if invert:
             raw_rgb = raw_rgb.transpose((2, 0, 1))
-        # normalize
-        return (raw_rgb / np.iinfo(raw_rgb.dtype).max)
+
+        normalized = (raw_rgb - raw_rgb.min()) / (raw_rgb.max() - raw_rgb.min())
+
+        # debug plotting
+        fig, ax = plt.subplots(nrows=1, ncols=4)
+        ax[0].imshow(normalized[0, :, :])
+        ax[1].imshow(normalized[1, :, :])
+        ax[2].imshow(normalized[2, :, :])
+        ax[3].imshow(normalized[3, :, :])
+        plt.show()
+
+        return normalized
 
     def __getitem__(self, idx):
         x = torch.tensor(self.open_as_array(idx, invert=self.pytorch, include_nir=True), dtype=torch.float32)

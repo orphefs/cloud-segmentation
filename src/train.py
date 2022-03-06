@@ -133,12 +133,12 @@ if __name__ == '__main__':
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
-        path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "images"),
+        path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "labels"),
         batch_size=1,
-        split=(80, 20)
-
+        split=(80, 20),
+        normalize_dataset=True,
     )
-    loss_function = nn.MSELoss()
+    loss_function = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.Adam(unet.parameters(), lr=0.01)
     train_loss, validation_loss = train(
         model=unet,
