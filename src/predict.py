@@ -52,8 +52,7 @@ def plot_results(x, y):
 
     plt.show()
 
-
-if __name__ == '__main__':
+def predict():
     # load data
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
@@ -65,7 +64,7 @@ if __name__ == '__main__':
 
     # prepare model
     path_to_checkpoints_dir = Path(DATA_DIR) / "checkpoints"
-    path_to_model_checkpoint = path_to_checkpoints_dir / "model.pt"
+
     checkpoint = torch.load(path_to_model_checkpoint)
     model = UNET(n_channels=4, n_classes=1, bilinear=True)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -81,3 +80,7 @@ if __name__ == '__main__':
     batch_no = 319
     x, y = batches[batch_no]
     plot_results(x, y)
+
+if __name__ == '__main__':
+    predict(path_to_model_checkpoint)
+    typer.run(predict)
