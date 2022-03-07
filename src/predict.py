@@ -6,7 +6,8 @@ import numpy as np
 import sklearn
 import torch
 from torch.utils.data import DataLoader
-from typing import List
+from torch import nn
+from typing import List, Union
 from sklearn.metrics import confusion_matrix
 from definitions import DATA_DIR
 from src.model.unet import UNET
@@ -76,9 +77,12 @@ def plot_results(x, y, output, pred_probs, threshold_value):
     plt.show()
 
 
-def predict(path_to_model_checkpoint: str, inputs: List[torch.Tensor], true_masks: List[torch.Tensor],
+def predict(path_to_model_checkpoint: Union[str, nn.Module], inputs: List[torch.Tensor], true_masks: List[torch.Tensor],
             threshold_value: float):
-    model = load_model(path_to_model_checkpoint)
+    if isinstance(path_to_model_checkpoint, str):
+        model = load_model(path_to_model_checkpoint)
+    else:
+        model = path_to_model_checkpoint
     output = model(inputs)
     pred_probs = torch.sigmoid(output)[0]
     plot_results(inputs, true_masks, output, pred_probs, threshold_value)
