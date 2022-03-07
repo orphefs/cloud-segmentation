@@ -59,7 +59,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                 # convert to datatype according to loss fn
 
                 x = x.to(device=device, dtype=torch.float32)
-                y = y.to(device=device, dtype=torch.long)
+                y = y.to(device=device, dtype=torch.float32)
 
                 # forward pass
                 if phase == 'train':
@@ -74,7 +74,7 @@ def train(model: nn.Module, train_dl: DataLoader, validation_dl: DataLoader,
                         print("target min", y.min())
                         print("target max", y.max())
 
-                    y = torch.argmax(y, dim=1)
+                    # y = torch.argmax(y, dim=1)
                     loss = loss_fn(outputs, y)
 
                     if DEBUG_PRINT:
@@ -150,16 +150,16 @@ if __name__ == '__main__':
     if not os.path.exists(path_to_checkpoints_dir):
         os.mkdir(path_to_checkpoints_dir)
 
-    unet = UNET(n_channels=4, n_classes=2, bilinear=True)
+    unet = UNET(n_channels=4, n_classes=1, bilinear=True)
     # test one pass
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
         path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "labels"),
-        batch_size=1,
-        split=(180,20),
+        batch_size=4,
+        split=(1700, 64),
         normalize_dataset=False,
     )
-    loss_function = nn.CrossEntropyLoss()
+    loss_function = nn.BCEWithLogitsLoss()
     optimizer = torch.optim.RMSprop(unet.parameters(), lr=0.01)
     train_loss, validation_loss = train(
         model=unet,
@@ -169,5 +169,5 @@ if __name__ == '__main__':
         optimizer=optimizer,
         accuracy_fn=accuracy_metric,
         path_to_model_checkpoint=path_to_checkpoints_dir / "model.pt",
-        epochs=10,
+        epochs=100,
     )
