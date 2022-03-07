@@ -78,6 +78,13 @@ def plot_results(x, y, output, pred_probs, threshold_value):
 
 def predict(path_to_model_checkpoint: str, inputs: List[torch.Tensor], true_masks: List[torch.Tensor],
             threshold_value: float):
+    model = load_model(path_to_model_checkpoint)
+    output = model(inputs)
+    pred_probs = torch.sigmoid(output)[0]
+    plot_results(inputs, true_masks, output, pred_probs, threshold_value)
+
+
+def load_model(path_to_model_checkpoint: str):
     checkpoint = torch.load(path_to_model_checkpoint, map_location=torch.device(device))
     model = UNET(n_channels=4, n_classes=1, bilinear=True)
     model.load_state_dict(checkpoint['model_state_dict'])
@@ -86,9 +93,25 @@ def predict(path_to_model_checkpoint: str, inputs: List[torch.Tensor], true_mask
     epoch = checkpoint['epoch']
     loss = checkpoint['loss']
     model.eval()
-    output = model(inputs)
-    pred_probs = torch.sigmoid(output)[0]
-    plot_results(inputs, true_masks, output, pred_probs, threshold_value)
+    return model
+
+
+def evaluate(path_to_model_checkpoint: str, dataloader: DataLoader, threshold_value: float):
+    model = load_model(path_to_model_checkpoint)
+
+    total_confusion_matrix = np.zeros([2,2], dtype=np.uint)
+    for batch in dataloader:
+        inputs, y = batch
+        true_mask = y.detach().numpy()[0, 0, :, :]
+        output = model(inputs)
+        pred_probs = torch.sigmoid(output)[0]
+        pprobs = pred_probs.detach().numpy().squeeze()
+
+        # threshold in order to calculate accuracy metric
+        pprobs[pprobs >= threshold_value] = 1
+        pprobs[pprobs < threshold_value] = 0
+        total_confusion_matrix = total_confusion_matrix+ confusion_matrix(true_mask.flatten(), pprobs.flatten().astype(dtype=np.uint))
+    return total_confusion_matrix
 
 
 if __name__ == '__main__':
@@ -109,3 +132,6 @@ if __name__ == '__main__':
 
     predict(path_to_model_checkpoint="/home/orphefs/Dropbox/job_applications/overstory/model.pt",
         inputs=x, true_masks=y, threshold_value=0.995)
+
+    total_confusion_matrx = evaluate(path_to_model_checkpoint="/home/orphefs/Dropbox/job_applications/overstory/model.pt",
+    dataloader=valid_dl, threshold_value=0.995)
