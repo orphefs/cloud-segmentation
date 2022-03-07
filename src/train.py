@@ -156,7 +156,7 @@ if __name__ == '__main__':
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
         path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "labels"),
         batch_size=1,
-        split=(80, 20),
+        split=(180,20),
         normalize_dataset=False,
     )
     loss_function = nn.CrossEntropyLoss()
