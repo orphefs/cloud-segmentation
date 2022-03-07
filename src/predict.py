@@ -3,6 +3,7 @@ import random
 import os
 from pathlib import Path
 import numpy as np
+import sklearn
 import torch
 from torch.utils.data import DataLoader
 from typing import List
@@ -62,9 +63,11 @@ def plot_results(x, y, output, pred_probs, threshold_value):
     ax[1, 3].set_title("Thresholded at {}".format(threshold_value))
     ax[2, 3].hist(pprobs.flatten(), bins=50)
 
-    pprobs = 1 - pprobs
+    # pprobs = 1 - pprobs
 
-    accuracy = accuracy_metric(inp=pprobs, targ=true_mask)
+    # accuracy = accuracy_metric(inp=pprobs, targ=true_mask)
+    accuracy = sklearn.metrics.accuracy_score(y_true=true_mask.flatten(),
+        y_pred=pprobs.flatten())
 
     print(confusion_matrix(true_mask.flatten(), pprobs.flatten()))
 
@@ -89,6 +92,7 @@ def predict(path_to_model_checkpoint: str, inputs: List[torch.Tensor], true_mask
 
 
 if __name__ == '__main__':
+    # Example usage
     # load data
     _, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
@@ -99,9 +103,9 @@ if __name__ == '__main__':
 
     batches = list(valid_dl)
     # no_batch = random.randrange(0,len(batches))
-    no_batch = 81
+    no_batch = 30
     print(no_batch)
     x, y = batches[no_batch]
 
     predict(path_to_model_checkpoint="/home/orphefs/Dropbox/job_applications/overstory/model.pt",
-        inputs=x, true_masks=y, threshold_value=0.99)
+        inputs=x, true_masks=y, threshold_value=0.995)
