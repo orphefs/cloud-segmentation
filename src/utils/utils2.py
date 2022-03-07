@@ -203,6 +203,9 @@ class ImageTiler:
 
         # loop through raw tifs
         for path_to_image in paths_to_images:
+
+            print("Tiling image {}...".format(path_to_image))
+
             with rasterio.open(path_to_image, "r") as infile:
                 if "r" in bands:
                     band_r = infile.read(1)
