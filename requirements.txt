@@ -1,4 +1,5 @@
 typer
+random
 fastai
 ipython
 numpy
