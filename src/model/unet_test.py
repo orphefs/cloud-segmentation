@@ -11,8 +11,8 @@ if __name__ == '__main__':
     train_dl, valid_dl = get_dataloaders(
         path_to_tiled_img_dir=os.path.join(DATA_DIR, "tiled", "images"),
         path_to_tiled_label_dir=os.path.join(DATA_DIR, "tiled", "images"),
-        batch_size=2,
-        split=(80, 20)
+        batch_size=4,
+        split=(0.8, 0.2)
     )
     # test one pass
     xb, yb = next(iter(train_dl))

@@ -1,8 +1,9 @@
 import glob
 import torch
+from torch._C import Generator
 from torch.utils.data import DataLoader
 from torchvision.transforms import transforms
-from typing import Collection, List, Tuple
+from typing import Collection, List, Tuple, Optional
 from PIL import Image
 import pathlib
 from collections import namedtuple
@@ -253,7 +254,8 @@ class ImageTiler:
 
 
 def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, batch_size: int = 16,
-                    split: Tuple[int, int] = (80, 20), normalize_dataset: bool = True) -> Tuple[
+                    split: Tuple[float, float] = (80, 20), normalize_dataset: bool = True,
+                    generator: Optional[Generator] = torch.Generator().manual_seed(1)) -> Tuple[
     DataLoader, DataLoader]:
     data = CloudDataset(
         path_to_images_dir=path_to_tiled_img_dir,
@@ -291,7 +293,13 @@ def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, ba
         )
 
     # split the data
-    train_ds, valid_ds = torch.utils.data.random_split(data, split)
+
+    train_ds, valid_ds = torch.utils.data.random_split(
+        data,
+        (int(np.round(split[0] * len(data))), int(np.round(split[1] * len(data)))),
+        generator=generator
+    )
+
     train_dl = DataLoader(train_ds, batch_size=batch_size, shuffle=False, num_workers=0)
     valid_dl = DataLoader(valid_ds, batch_size=batch_size, shuffle=False, num_workers=0)
 
@@ -299,6 +307,7 @@ def get_dataloaders(path_to_tiled_img_dir: str, path_to_tiled_label_dir: str, ba
 
 
 if __name__ == '__main__':
+    # Example usage of functions in this module
     tile_shape = (256, 256)
 
     # tile the images
