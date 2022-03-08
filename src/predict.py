@@ -64,9 +64,6 @@ def plot_results(x, y, output, pred_probs, threshold_value):
     ax[1, 3].set_title("Thresholded at {}".format(threshold_value))
     ax[2, 3].hist(pprobs.flatten(), bins=50)
 
-    # pprobs = 1 - pprobs
-
-    # accuracy = accuracy_metric(inp=pprobs, targ=true_mask)
     accuracy = sklearn.metrics.accuracy_score(y_true=true_mask.flatten(),
         y_pred=pprobs.flatten())
 
